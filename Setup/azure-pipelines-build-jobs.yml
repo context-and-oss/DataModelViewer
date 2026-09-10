@@ -63,7 +63,7 @@ steps:
       versionSpec: "20.x"
       displayName: "Install Node.js"
 
-  - script: npm install && npm run build && mv .next/static .next/standalone/.next/static && mv public .next/standalone/public
+  - script: npm ci && npm run build && mv .next/static .next/standalone/.next/static && mv public .next/standalone/public
     workingDirectory: $(Build.SourcesDirectory)/Website
     displayName: "Build Next.js app"
 

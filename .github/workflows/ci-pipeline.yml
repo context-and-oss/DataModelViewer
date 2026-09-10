@@ -25,13 +25,17 @@ jobs:
 
   website:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ['20.x', '22.23.2', '24.x']
 
     steps:
     - uses: actions/checkout@v4
-    - name: ⚙️ Setup Node.js 22.x
+    - name: ⚙️ Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: 22.x
+        node-version: ${{ matrix.node }}
         cache: 'npm'
         cache-dependency-path: Website/package-lock.json
     - name: 📦 Install dependencies
@@ -46,3 +50,17 @@ jobs:
     - name: 🔨 Build
       run: npm run build
       working-directory: Website
+
+  ci:
+    name: ci
+    if: always()
+    needs: [generator, website]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require all checks to pass
+        env:
+          GENERATOR_RESULT: ${{ needs.generator.result }}
+          WEBSITE_RESULT: ${{ needs.website.result }}
+        run: |
+          test "$GENERATOR_RESULT" = success
+          test "$WEBSITE_RESULT" = success
