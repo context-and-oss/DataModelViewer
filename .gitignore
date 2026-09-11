@@ -390,3 +390,6 @@ MigrationBackup/
 Generator/appsettings.local.json
 /Generator/Properties/launchSettings.json
 /.claude/settings.local.json
+
+# Local reviewer runtime, cache, and generated credentials
+/.review/
