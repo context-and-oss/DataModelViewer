@@ -14,6 +14,7 @@ import { Box, CircularProgress, debounce, Tooltip } from '@mui/material';
 interface IListProps {
     setCurrentIndex: (index: number) => void;
     entityActiveTabs: Map<string, number>;
+    onExitSearch: () => void;
 }
 
 // Helper to highlight search matches
@@ -24,7 +25,7 @@ export function highlightMatch(text: string, search: string) {
     return <>{text.slice(0, idx)}<mark className="bg-yellow-200 text-black px-0.5 rounded">{text.slice(idx, idx + search.length)}</mark>{text.slice(idx + search.length)}</>;
 }
 
-export const List = ({ setCurrentIndex, entityActiveTabs }: IListProps) => {
+export const List = ({ setCurrentIndex, entityActiveTabs, onExitSearch }: IListProps) => {
     const dispatch = useDatamodelViewDispatch();
     const { currentSection, loadingSection } = useDatamodelView();
     const { groups, filtered, search } = useDatamodelData();
@@ -33,6 +34,8 @@ export const List = ({ setCurrentIndex, entityActiveTabs }: IListProps) => {
     const parentRef = useRef<HTMLDivElement | null>(null);
     // used to relocate section after search/filter
     const [sectionVirtualItem, setSectionVirtualItem] = useState<string | null>(null);
+
+    const [pendingSection, setPendingSection] = useState<string | null>(null);
 
     // Helper function to check if entity has access from selected security roles
     const hasSecurityRoleAccess = useCallback((entity: EntityType): boolean => {
@@ -179,19 +182,28 @@ export const List = ({ setCurrentIndex, entityActiveTabs }: IListProps) => {
         rowVirtualizer.shouldAdjustScrollPositionOnItemSizeChange = () => false;
     }, [rowVirtualizer]);
 
-    const scrollToSection = useCallback((sectionId: string) => {
+    const scrollToSection = useCallback((sectionId: string, revealIfFiltered = false) => {
         const sectionIndex = flatItems.findIndex(item =>
             item.type === 'entity' && item.entity.SchemaName === sectionId
         );
 
         if (sectionIndex === -1) {
-            console.warn(`Section ${sectionId} not found in virtualized list`);
+            if (!revealIfFiltered) return;
+            const target = groups.flatMap(group => group.Entities).find(entity => entity.SchemaName === sectionId);
+            if (search && target && (selectedSecurityRoles.length === 0 || hasSecurityRoleAccess(target))) {
+                // Retry after clearing search has restored the destination to the list.
+                setPendingSection(sectionId);
+                onExitSearch();
+            } else {
+                dispatch({ type: 'SET_LOADING_SECTION', payload: null });
+                showSnackbar('This table is not available with the current filters.', 'info');
+            }
             return;
         }
 
         smartScrollToIndex(sectionIndex);
 
-    }, [flatItems]);
+    }, [flatItems, groups, search, selectedSecurityRoles, hasSecurityRoleAccess, onExitSearch, dispatch, showSnackbar]);
 
     const scrollToAttribute = useCallback((sectionId: string, attrSchema: string) => {
         const attrId = `attr-${sectionId}-${attrSchema}`;
@@ -279,6 +291,25 @@ export const List = ({ setCurrentIndex, entityActiveTabs }: IListProps) => {
         requestAnimationFrame(tryFix);
     }, [rowVirtualizer]);
 
+    useEffect(() => {
+        if (!pendingSection || search) return;
+        const sectionIndex = flatItems.findIndex(item => item.type === 'entity' && item.entity.SchemaName === pendingSection);
+        if (sectionIndex === -1) {
+            dispatch({ type: 'SET_LOADING_SECTION', payload: null });
+            setPendingSection(null);
+            return;
+        }
+        const frame = requestAnimationFrame(() => {
+            smartScrollToIndex(sectionIndex);
+            const target = flatItems[sectionIndex];
+            updateURL({ query: { group: target.group.Name, section: pendingSection } });
+            dispatch({ type: 'SET_CURRENT_GROUP', payload: target.group.Name });
+            dispatch({ type: 'SET_CURRENT_SECTION', payload: pendingSection });
+            dispatch({ type: 'SET_LOADING_SECTION', payload: null });
+            setPendingSection(null);
+        });
+        return () => cancelAnimationFrame(frame);
+    }, [pendingSection, search, flatItems, smartScrollToIndex, dispatch]);
     return (
         <>
             <Box className={`absolute w-full h-full flex items-center justify-center z-[100] transition-opacity duration-300 ${loadingSection ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>

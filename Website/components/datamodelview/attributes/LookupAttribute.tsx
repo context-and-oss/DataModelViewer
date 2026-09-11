@@ -22,7 +22,7 @@ export default function LookupAttribute({ attribute }: { attribute: LookupAttrib
                             onClick={() => {
                                 dispatch({ type: 'SET_LOADING_SECTION', payload: target.Name });
                                 dispatch({ type: "SET_CURRENT_SECTION", payload: target.Name });
-                                scrollToSection(target.Name);
+                                scrollToSection(target.Name, true);
                             }}
                             sx={{
                                 fontSize: { xs: '0.625rem', md: '0.875rem' },
