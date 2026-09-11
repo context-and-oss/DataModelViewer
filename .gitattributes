@@ -1,0 +1,2 @@
+# Preserve the reviewed sample bytes used by SHA256SUMS.txt on every checkout.
+Setup/review-sample/Data.ts -text whitespace=cr-at-eol
