@@ -218,16 +218,8 @@ namespace Generator
                 logger.LogInformation($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}] Getting workflow dependencies for attributes");
 
                 // Get workflow dependencies for attributes (returns attribute ObjectId -> list of workflow ObjectIds)
-                var explicitComponentsList = solutionComponents.ToList();
-                var workflowDependencyMap = await solutionComponentService.GetWorkflowDependenciesForAttributesAsync(
-                    explicitComponentsList.Where(c => c.ComponentType == 2).Select(c => new SolutionComponentInfo(
-                        c.ObjectId,
-                        c.SolutionComponentId ?? Guid.Empty,
-                        c.ComponentType,
-                        c.RootComponentBehaviour,
-                        new EntityReference("solution", c.SolutionId)
-                    ))
-                );
+                // Scan the same attributes we export, including columns included with a whole table.
+                var workflowDependencyMap = await solutionComponentService.GetWorkflowDependenciesForAttributesAsync(attributesInSolution);
 
                 // Get workflow details for all unique workflow IDs
                 var allWorkflowIds = workflowDependencyMap.Values.SelectMany(ids => ids).Distinct().ToList();

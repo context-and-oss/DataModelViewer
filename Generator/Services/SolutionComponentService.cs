@@ -217,10 +217,10 @@ public class SolutionComponentService
         return results;
     }
 
-    private HashSet<DependencyInfo> GetDependentComponents(IEnumerable<SolutionComponentInfo> components)
+    private HashSet<DependencyInfo> GetAttributeDependentComponents(IEnumerable<Guid> attributeIds)
     {
         var results = new HashSet<DependencyInfo>();
-        var componentsList = components.ToList();
+        var componentsList = attributeIds.Distinct().ToList();
         int totalCount = componentsList.Count;
         int processedCount = 0;
         int errorCount = 0;
@@ -250,8 +250,8 @@ public class SolutionComponentService
             {
                 executeMultiple.Requests.Add(new RetrieveDependentComponentsRequest
                 {
-                    ComponentType = component.ComponentType,
-                    ObjectId = component.ObjectId
+                    ComponentType = 2,
+                    ObjectId = component
                 });
             }
 
@@ -267,7 +267,7 @@ public class SolutionComponentService
                     {
                         errorCount++;
                         var component = batch[j];
-                        _logger.LogWarning($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}] Failed to retrieve dependents for component type {component.ComponentType}, ObjectId {component.ObjectId}: {item.Fault.Message}");
+                        _logger.LogWarning($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}] Failed to retrieve dependents for attribute {component}: {item.Fault.Message}");
                         continue;
                     }
 
@@ -372,14 +372,14 @@ public class SolutionComponentService
     /// <summary>
     /// Gets workflow dependencies for attributes by finding workflows (type 29) that depend on specified attributes
     /// </summary>
-    /// <param name="attributeComponents">List of attribute components to check for dependencies</param>
+    /// <param name="attributeIds">Metadata IDs of exported attributes, including whole-table subcomponents</param>
     /// <returns>Dictionary mapping attribute ObjectId to list of workflow ObjectIds that depend on it</returns>
-    public async Task<Dictionary<Guid, List<Guid>>> GetWorkflowDependenciesForAttributesAsync(IEnumerable<SolutionComponentInfo> attributeComponents)
+    public async Task<Dictionary<Guid, List<Guid>>> GetWorkflowDependenciesForAttributesAsync(IEnumerable<Guid> attributeIds)
     {
         var workflowDependencies = new Dictionary<Guid, List<Guid>>();
 
-        // Filter to only attributes (component type 2)
-        var attributes = attributeComponents.Where(c => c.ComponentType == 2).ToList();
+        // Whole-table additions may have no individual solutioncomponent rows.
+        var attributes = attributeIds.Distinct().ToList();
 
         if (!attributes.Any())
         {
@@ -390,7 +390,7 @@ public class SolutionComponentService
         _logger.LogInformation($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}] Checking {attributes.Count} attributes for workflow dependencies");
 
         // Get all dependent components for attributes
-        var dependencies = GetDependentComponents(attributes);
+        var dependencies = GetAttributeDependentComponents(attributes);
         _logger.LogInformation($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}] Found {dependencies.Count} total dependencies for attributes");
 
         if (!dependencies.Any())
