@@ -1,0 +1,44 @@
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const vm = require('node:vm');
+const ts = require('typescript');
+const root = path.resolve(__dirname, '..');
+const compile = file => ts.transpileModule(fs.readFileSync(path.join(root, file), 'utf8'), {compilerOptions: {module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020}}).outputText;
+const matcherExports = {};
+vm.runInNewContext(compile('lib/columnSearch.ts'), {exports: matcherExports});
+const {columnMatchesSearch} = matcherExports;
+const names = {columnNames:true,columnDescriptions:false,columnDataTypes:false};
+const descriptions = {...names,columnNames:false,columnDescriptions:true};
+const types = {...names,columnNames:false,columnDataTypes:true};
+const base = {SchemaName:'dmvp_Forum',DisplayName:'Forum',Description:'Discussion forum',IsCustomAttribute:true,IsStandardFieldModified:false};
+const text = {...base,AttributeType:'StringAttribute',Format:'Rich Text',MaxLength:2000};
+const date = {...base,SchemaName:'dmvp_Start',DisplayName:'Start',AttributeType:'DateTimeAttribute',Format:'Date',Behavior:'DateOnly'};
+const choice = {...base,SchemaName:'dmvp_Category',DisplayName:'Category',Description:null,AttributeType:'ChoiceAttribute',Type:'Multi',Options:[{Name:'Selected',Value:1}]};
+assert.equal(columnMatchesSearch(text,'forum',types),false,'Data types must not search names/descriptions');
+assert.equal(columnMatchesSearch(text,'discussion',names),false,'Names scope must not search descriptions');
+assert.equal(columnMatchesSearch(text,'discussion',descriptions),true);
+assert.equal(columnMatchesSearch(text,'rich',types),true);
+assert.equal(columnMatchesSearch(text,'text',types),true);
+assert.equal(columnMatchesSearch(date,'Date - DateOnly',types),true);
+assert.equal(columnMatchesSearch({...date,Format:'Date & time'},'date & time',types),true);
+assert.equal(columnMatchesSearch(choice,'choice',types),true);
+assert.equal(columnMatchesSearch(choice,'multi-select',types),true);
+assert.equal(columnMatchesSearch({...choice,Type:'Single'},'single-select',types),true);
+assert.equal(columnMatchesSearch(choice,'selected',names),false);
+assert.equal(columnMatchesSearch(choice,'selected',types),true);
+const messages=[];
+const worker={postMessage:message=>messages.push(message)};
+vm.runInNewContext(compile('components/datamodelview/searchWorker.ts'), {exports:{},self:worker,setTimeout,require:name=>{assert.equal(name,'@/lib/columnSearch');return matcherExports;}});
+(async()=>{
+ await worker.onmessage({data:{type:'init',groups:[{Name:'Playground',Entities:[{SchemaName:'dmvp_Project',DisplayName:'Project',Description:null,Attributes:[text,date,choice],Relationships:[],SecurityRoles:[]}]}]}});
+ for(const [query,scope,expected] of [['forum',types,[]],['discussion',names,[]],['rich',types,['dmvp_Forum']],['Date - DateOnly',types,['dmvp_Start']],['multi-select',types,['dmvp_Category']],['nomatches',types,[]]]) {
+  messages.length=0;
+  await worker.onmessage({data:{type:'search',data:query,searchScope:scope,requestId:42}});
+  assert.equal(messages.at(-1).complete,true,`${query}: completion required even without results`);
+  assert.equal(messages.at(-1).requestId,42);
+  const rows=messages.flatMap(message=>message.data||[]).filter(item=>item.type==='attribute').map(item=>item.attribute.SchemaName);
+  assert.deepEqual(Array.from(rows),expected,query);
+ }
+ console.log('PASS: 12 scoped matching assertions and 6 worker result/completion scenarios');
+})().catch(error=>{console.error(error);process.exitCode=1;});
