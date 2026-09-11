@@ -32,6 +32,12 @@ export const List = ({ setCurrentIndex, entityActiveTabs, onExitSearch }: IListP
     const { selectedSecurityRoles } = useEntityFilters();
     const { showSnackbar } = useSnackbar();
     const parentRef = useRef<HTMLDivElement | null>(null);
+    // Search handlers change when scrolling updates the restore position. Keep
+    // navigation stable so callback registration cannot replay URL navigation.
+    const onExitSearchRef = useRef(onExitSearch);
+    useEffect(() => {
+        onExitSearchRef.current = onExitSearch;
+    }, [onExitSearch]);
     // used to relocate section after search/filter
     const [sectionVirtualItem, setSectionVirtualItem] = useState<string | null>(null);
 
@@ -193,7 +199,7 @@ export const List = ({ setCurrentIndex, entityActiveTabs, onExitSearch }: IListP
             if (search && target && (selectedSecurityRoles.length === 0 || hasSecurityRoleAccess(target))) {
                 // Retry after clearing search has restored the destination to the list.
                 setPendingSection(sectionId);
-                onExitSearch();
+                onExitSearchRef.current();
             } else {
                 dispatch({ type: 'SET_LOADING_SECTION', payload: null });
                 showSnackbar('This table is not available with the current filters.', 'info');
@@ -203,7 +209,7 @@ export const List = ({ setCurrentIndex, entityActiveTabs, onExitSearch }: IListP
 
         smartScrollToIndex(sectionIndex);
 
-    }, [flatItems, groups, search, selectedSecurityRoles, hasSecurityRoleAccess, onExitSearch, dispatch, showSnackbar]);
+    }, [flatItems, groups, search, selectedSecurityRoles, hasSecurityRoleAccess, dispatch, showSnackbar]);
 
     const scrollToAttribute = useCallback((sectionId: string, attrSchema: string) => {
         const attrId = `attr-${sectionId}-${attrSchema}`;
