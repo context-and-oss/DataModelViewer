@@ -231,6 +231,7 @@ public class ActionAnalyzersTests : TestBase
 
         // Assert
         Assert.Contains("UpdateRecord", operationIds);
+        Assert.Contains("UpdateOnlyRecord", operationIds);
         Assert.Contains("PatchItem", operationIds);
     }
 
