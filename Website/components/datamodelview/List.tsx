@@ -286,10 +286,13 @@ export const List = ({ setCurrentIndex, entityActiveTabs, onExitSearch }: IListP
 
             requestAnimationFrame(() => {
                 rowVirtualizer.scrollToIndex(index, { align: 'start' });
+                // Re-selecting an aligned table does not emit a scroll event.
+                // Finish navigation once the target is mounted and aligned.
+                dispatch({ type: 'SET_LOADING_SECTION', payload: null });
             });
         };
         requestAnimationFrame(tryFix);
-    }, [rowVirtualizer]);
+    }, [rowVirtualizer, dispatch]);
 
     useEffect(() => {
         if (!pendingSection || search) return;
