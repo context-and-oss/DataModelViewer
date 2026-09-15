@@ -1,3 +1,10 @@
+## [2.3.6] - 2026-09-15
+
+### Bug Fixes
+
+* fix(website): use columns consistently in UI text ([932862e](https://github.com/context-and-oss/DataModelViewer/commit/932862e))
+
+
 ## [2.3.5] - 2026-06-05
 
 ### Other Changes
