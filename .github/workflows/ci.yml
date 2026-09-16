@@ -46,3 +46,22 @@ jobs:
     - name: 🔨 Build
       run: npm run build
       working-directory: Website
+
+  # The job key is the status check context. The org ruleset context-and-oss-required-ci requires
+  # exactly `ci`, so keep this key as is: no `name:`, no matrix. `if: always()` lets it report even
+  # when an upstream job failed; the step below then turns that into a red check.
+  ci:
+    needs: [generator, website]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fail if any CI job did not succeed
+        run: |
+          set -euo pipefail
+          echo "generator=${{ needs.generator.result }} website=${{ needs.website.result }}"
+          for result in "${{ needs.generator.result }}" "${{ needs.website.result }}"; do
+            if [[ "$result" != 'success' ]]; then
+              echo "::error::A required CI job did not succeed ($result)."
+              exit 1
+            fi
+          done
