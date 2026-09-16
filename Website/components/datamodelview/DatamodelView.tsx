@@ -40,6 +40,7 @@ function DatamodelViewContent() {
     const { filters: entityFilters, selectedSecurityRoles } = useEntityFilters();
     const workerRef = useRef<Worker | null>(null);
     const [currentSearchIndex, setCurrentSearchIndex] = useState(0);
+    const [searchResetKey, setSearchResetKey] = useState(0);
     const accumulatedResultsRef = useRef<SearchResultItem[]>([]); // Track all results during search
     const searchRequestIdRef = useRef(0); // Track search requests to ignore stale results
     const [searchScope, setSearchScope] = useState<SearchScope>({
@@ -99,10 +100,10 @@ function DatamodelViewContent() {
 
     // Isolated search handlers - these don't depend on component state
     const handleSearch = useCallback((searchValue: string) => {
+        // Clearing a search must also invalidate results still in flight.
+        searchRequestIdRef.current += 1;
         if (workerRef.current && groups) {
             if (searchValue.length >= 3) {
-                // Increment request ID to invalidate previous searches
-                searchRequestIdRef.current += 1;
                 const currentRequestId = searchRequestIdRef.current;
 
                 // Convert Map to plain object for worker
@@ -133,6 +134,12 @@ function DatamodelViewContent() {
         datamodelDataDispatch({ type: "SET_SEARCH", payload: searchValue.length >= 3 ? searchValue : "" });
         setCurrentSearchIndex(searchValue.length >= 3 ? 1 : 0); // Reset to first result when searching, 0 when cleared
     }, [groups, datamodelDataDispatch, restoreSection, entityFilters, searchScope, selectedSecurityRoles]);
+
+    const handleExitSearch = useCallback(() => {
+        handleSearch("");
+        datamodelDispatch({ type: "SET_LOADING", payload: false });
+        setSearchResetKey(value => value + 1);
+    }, [handleSearch, datamodelDispatch]);
 
     const handleLoadingChange = useCallback((isLoading: boolean) => {
         datamodelDispatch({ type: "SET_LOADING", payload: isLoading });
@@ -349,6 +356,7 @@ function DatamodelViewContent() {
 
         const handleMessage = (e: MessageEvent) => {
             const message = e.data;
+            const requestId = searchRequestIdRef.current;
 
             // Ignore stale search results
             if (message.requestId && message.requestId < searchRequestIdRef.current) {
@@ -393,6 +401,7 @@ function DatamodelViewContent() {
 
                         // Small delay to ensure virtual list is ready
                         setTimeout(() => {
+                            if (requestId !== searchRequestIdRef.current) return;
                             if (firstResult.type === 'attribute') {
                                 scrollToAttribute(firstResult.entity.SchemaName, firstResult.attribute.SchemaName);
                             } else {
@@ -411,6 +420,7 @@ function DatamodelViewContent() {
                             datamodelDispatch({ type: "SET_CURRENT_SECTION", payload: firstResult.entity.SchemaName });
                             datamodelDispatch({ type: "SET_CURRENT_GROUP", payload: firstResult.group.Name });
                             setTimeout(() => {
+                                if (requestId !== searchRequestIdRef.current) return;
                                 scrollToSection(firstResult.entity.SchemaName);
                             }, 100);
                         }
@@ -502,16 +512,17 @@ function DatamodelViewContent() {
                     </div>
                 )} */}
                 <TimeSlicedSearch
+                    key={searchResetKey}
                     onSearch={handleSearch}
                     onLoadingChange={handleLoadingChange}
                     onNavigateNext={handleNavigateNext}
                     onNavigatePrevious={handleNavigatePrevious}
-                    initialLocalValue={initialLocalValue}
+                    initialLocalValue={searchResetKey === 0 ? initialLocalValue : ""}
                     currentIndex={currentSearchIndex}
                     totalResults={totalResults}
                     onSearchScopeChange={handleSearchScopeChange}
                 />
-                <List setCurrentIndex={setCurrentSearchIndex} entityActiveTabs={entityActiveTabs} />
+                <List setCurrentIndex={setCurrentSearchIndex} entityActiveTabs={entityActiveTabs} onExitSearch={handleExitSearch} />
             </div>
         </div>
     );
