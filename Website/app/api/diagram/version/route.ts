@@ -6,7 +6,10 @@ export async function GET(request: NextRequest) {
         const { searchParams } = new URL(request.url);
         const filePath = searchParams.get('filePath');
         const commitId = searchParams.get('commitId');
-        const repositoryName = searchParams.get('repositoryName') || undefined;
+        // Sourced from configuration, never from the request: it lands in the
+        // path of the Azure DevOps URL, where a caller-supplied value could
+        // point the authenticated request at another repository.
+        const repositoryName = process.env.ADO_REPOSITORY_NAME || '';
         
         if (!filePath) {
             return NextResponse.json(

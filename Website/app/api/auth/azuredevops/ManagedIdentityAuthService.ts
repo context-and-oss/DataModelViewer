@@ -46,7 +46,28 @@ class ManagedIdentityAuth {
         }
     }
 
+    /**
+     * Rejects any URL that does not sit inside the configured organization and
+     * project. Callers assemble URLs from request data, so this is the last
+     * point at which a value that escaped its path segment can be caught -
+     * before the managed-identity token is attached and sent. `new URL()`
+     * resolves `..` first, so traversal is compared after normalization.
+     */
+    private assertConfiguredTarget(url: string): void {
+        const target = new URL(url);
+        const allowed = new URL(`${this.config.organizationUrl}${this.config.projectName}/`);
+
+        if (target.origin !== allowed.origin || !target.pathname.startsWith(allowed.pathname)) {
+            throw new Error(
+                `Refusing to send Azure DevOps credentials to ${target.origin}${target.pathname} - ` +
+                `only ${allowed.origin}${allowed.pathname} is configured.`
+            );
+        }
+    }
+
     async makeAuthenticatedRequest(url: string, options: RequestInit = {}): Promise<Response> {
+        this.assertConfiguredTarget(url);
+
         // Use PAT for local development, Managed Identity for production
         const pat = process.env.ADO_PAT;
         const isLocal = process.env.NODE_ENV === 'development' || pat;

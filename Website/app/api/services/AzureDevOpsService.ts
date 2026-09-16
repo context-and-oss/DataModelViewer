@@ -85,6 +85,37 @@ class AzureDevOpsError extends Error {
 }
 
 /**
+ * Builds a URL for the Azure DevOps Git REST API.
+ *
+ * The organization and project come from configuration, but the repository
+ * name and the query values are routinely taken from a request. Interpolating
+ * those straight into the URL lets a `../` walk out of the repositories path
+ * and an `&` append parameters the caller never wrote - on a request that
+ * carries the managed-identity token. Encoding each part keeps every value
+ * inside the slot it was meant for.
+ */
+function buildGitApiUrl(
+    repositoryName: string | undefined,
+    resourcePath = '',
+    query: Record<string, string | number | undefined> = {}
+): string {
+    const config = managedAuth.getConfig();
+
+    const params = new URLSearchParams();
+    for (const [key, value] of Object.entries(query)) {
+        if (value !== undefined) {
+            params.set(key, String(value));
+        }
+    }
+    params.set('api-version', '7.0');
+
+    const repository = encodeURIComponent(repositoryName ?? '');
+    const resource = resourcePath ? `/${resourcePath}` : '';
+
+    return `${config.organizationUrl}${config.projectName}/_apis/git/repositories/${repository}${resource}?${params}`;
+}
+
+/**
  * Lists files in the Azure DevOps Git repository
  * @param options Configuration for file retrieval
  * @returns Promise with array of file items
@@ -97,12 +128,13 @@ export async function listFilesFromRepo(options: LoadFileOptions): Promise<GitIt
     } = options;
 
     try {
-        // Get ADO configuration
-        const config = managedAuth.getConfig();
-
         // Construct the API URL for listing items in a folder
         const normalizedPath = filePath.startsWith('/') ? filePath.substring(1) : filePath;
-        const itemsUrl = `${config.organizationUrl}${config.projectName}/_apis/git/repositories/${repositoryName}/items?scopePath=/${normalizedPath}&version=${branch}&recursionLevel=OneLevel&api-version=7.0`;
+        const itemsUrl = buildGitApiUrl(repositoryName, 'items', {
+            scopePath: `/${normalizedPath}`,
+            version: branch,
+            recursionLevel: 'OneLevel'
+        });
 
         const response = await managedAuth.makeAuthenticatedRequest(itemsUrl);
 
@@ -157,9 +189,6 @@ export async function commitFileToRepo(options: CreateFileOptions): Promise<GitC
     } = options;
 
     try {
-        // Get ADO configuration
-        const config = managedAuth.getConfig();
-
         // Validate inputs
         if (!filePath || content === undefined) {
             throw new AzureDevOpsError('File path and content are required');
@@ -173,7 +202,7 @@ export async function commitFileToRepo(options: CreateFileOptions): Promise<GitC
             : Buffer.from(content).toString('base64');
 
         // Get the latest commit ID for the branch (needed for push operation)
-        const refsUrl = `${config.organizationUrl}${config.projectName}/_apis/git/repositories/${repositoryName}/refs?filter=heads/${branch}&api-version=7.0`;
+        const refsUrl = buildGitApiUrl(repositoryName, 'refs', { filter: `heads/${branch}` });
         const refsResponse = await managedAuth.makeAuthenticatedRequest(refsUrl);
 
         if (!refsResponse.ok) {
@@ -220,7 +249,7 @@ export async function commitFileToRepo(options: CreateFileOptions): Promise<GitC
         };
 
         // Push the changes
-        const pushUrl = `${config.organizationUrl}${config.projectName}/_apis/git/repositories/${repositoryName}/pushes?api-version=7.0`;
+        const pushUrl = buildGitApiUrl(repositoryName, 'pushes');
         const pushResponse = await managedAuth.makeAuthenticatedRequest(pushUrl, {
             method: 'POST',
             body: JSON.stringify(pushPayload)
@@ -261,9 +290,6 @@ export async function pullFileFromRepo<T>(options: LoadFileOptions): Promise<T> 
     } = options;
 
     try {
-        // Get ADO configuration
-        const config = managedAuth.getConfig();
-
         // Validate inputs
         if (!filePath) {
             throw new AzureDevOpsError('File path is required');
@@ -271,7 +297,12 @@ export async function pullFileFromRepo<T>(options: LoadFileOptions): Promise<T> 
 
         // Construct the API URL for getting file content
         const normalizedPath = filePath.startsWith('/') ? filePath.substring(1) : filePath;
-        const fileUrl = `${config.organizationUrl}${config.projectName}/_apis/git/repositories/${repositoryName}/items?path=/${normalizedPath}&versionDescriptor.version=${branch}&versionDescriptor.versionType=branch&includeContent=true&api-version=7.0`;
+        const fileUrl = buildGitApiUrl(repositoryName, 'items', {
+            path: `/${normalizedPath}`,
+            'versionDescriptor.version': branch,
+            'versionDescriptor.versionType': 'branch',
+            includeContent: 'true'
+        });
 
         const response = await managedAuth.makeAuthenticatedRequest(fileUrl);
 
@@ -316,9 +347,6 @@ export async function listFileVersions(options: FileVersionOptions): Promise<Fil
     } = options;
 
     try {
-        // Get ADO configuration
-        const config = managedAuth.getConfig();
-
         // Validate inputs
         if (!filePath) {
             throw new AzureDevOpsError('File path is required');
@@ -326,7 +354,10 @@ export async function listFileVersions(options: FileVersionOptions): Promise<Fil
 
         // Construct the API URL for getting file commit history
         const normalizedPath = filePath.startsWith('/') ? filePath : `/${filePath}`;
-        const commitsUrl = `${config.organizationUrl}${config.projectName}/_apis/git/repositories/${repositoryName}/commits?searchCriteria.$top=${maxVersions}&searchCriteria.itemPath=${normalizedPath}&api-version=7.0`;
+        const commitsUrl = buildGitApiUrl(repositoryName, 'commits', {
+            'searchCriteria.$top': maxVersions,
+            'searchCriteria.itemPath': normalizedPath
+        });
 
         const response = await managedAuth.makeAuthenticatedRequest(commitsUrl);
 
@@ -350,7 +381,7 @@ export async function listFileVersions(options: FileVersionOptions): Promise<Fil
         for (const commit of commitsData.value) {
             try {
                 // Get the changes for this specific commit to determine the change type
-                const changesUrl = `${config.organizationUrl}${config.projectName}/_apis/git/repositories/${repositoryName}/commits/${commit.commitId}/changes?api-version=7.0`;
+                const changesUrl = buildGitApiUrl(repositoryName, `commits/${encodeURIComponent(commit.commitId)}/changes`);
                 const changesResponse = await managedAuth.makeAuthenticatedRequest(changesUrl);
 
                 if (changesResponse.ok) {
@@ -409,9 +440,6 @@ export async function pullFileVersion<T>(options: LoadFileVersionOptions): Promi
     } = options;
 
     try {
-        // Get ADO configuration
-        const config = managedAuth.getConfig();
-
         // Validate inputs
         if (!filePath || !commitId) {
             throw new AzureDevOpsError('File path and commit ID are required');
@@ -419,7 +447,12 @@ export async function pullFileVersion<T>(options: LoadFileVersionOptions): Promi
 
         // Construct the API URL for getting file content at specific commit
         const normalizedPath = filePath.startsWith('/') ? filePath.substring(1) : filePath;
-        const fileUrl = `${config.organizationUrl}${config.projectName}/_apis/git/repositories/${repositoryName}/items?path=/${normalizedPath}&versionDescriptor.version=${commitId}&versionDescriptor.versionType=commit&includeContent=true&api-version=7.0`;
+        const fileUrl = buildGitApiUrl(repositoryName, 'items', {
+            path: `/${normalizedPath}`,
+            'versionDescriptor.version': commitId,
+            'versionDescriptor.versionType': 'commit',
+            includeContent: 'true'
+        });
 
         const response = await managedAuth.makeAuthenticatedRequest(fileUrl);
 
@@ -461,7 +494,7 @@ export async function getRepositoryInfo(repositoryName?: string): Promise<{ id: 
             throw new AzureDevOpsError('Repository name not found. Set AdoRepositoryName environment variable or pass repositoryName parameter.');
         }
 
-        const repoUrl = `${config.organizationUrl}${config.projectName}/_apis/git/repositories/${encodeURIComponent(repoName)}?api-version=7.0`;
+        const repoUrl = buildGitApiUrl(repoName);
         const response = await managedAuth.makeAuthenticatedRequest(repoUrl);
 
         if (!response.ok) {
