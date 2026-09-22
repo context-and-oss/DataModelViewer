@@ -15,6 +15,9 @@ var configuration =
     .Build();
 var verbose = configuration.GetValue("Verbosity", LogLevel.Warning);
 
+// Reject an empty selection before creating a Dataverse client or requesting credentials.
+SolutionSelection.Parse(configuration["DataverseSolutionNames"]);
+
 // Set up dependency injection
 var services = new ServiceCollection();
 
