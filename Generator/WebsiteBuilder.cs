@@ -41,7 +41,7 @@ internal class WebsiteBuilder
         var logoUrl = configuration.GetValue<string?>("Logo", defaultValue: null);
         var jsValue = logoUrl != null ? $"\"{logoUrl}\"" : "null";
         sb.AppendLine($"export const Logo: string | null = {jsValue};");
-        sb.AppendLine($"export const SolutionCount: number = {configuration["DataverseSolutionNames"]?.Split(",").Length ?? -1};");
+        sb.AppendLine($"export const SolutionCount: number = {SolutionSelection.Parse(configuration["DataverseSolutionNames"]).Length};");
         sb.AppendLine("");
 
         // ENTITIES
