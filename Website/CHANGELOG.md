@@ -1,3 +1,10 @@
+## [2.3.6] - 2026-09-23
+
+### Bug Fixes
+
+* fix(website): finish loading on repeated table navigation ([7b0ddb6](https://github.com/context-and-oss/DataModelViewer/commit/7b0ddb6))
+
+
 ## [2.3.5] - 2026-06-05
 
 ### Other Changes
