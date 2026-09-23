@@ -294,7 +294,7 @@ export const List = ({ setCurrentIndex, entityActiveTabs }: IListProps) => {
                     <div className="flex flex-col items-center justify-center h-64 text-gray-500">
                         <div className="text-lg font-medium mb-2">No tables found</div>
                         <div className="text-sm text-center">
-                            No attributes match your search for &quot;{search}&quot;
+                            No columns match your search for &quot;{search}&quot;
                         </div>
                     </div>
                 )}

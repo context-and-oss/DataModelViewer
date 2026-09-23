@@ -57,11 +57,11 @@ export const useAttributeSelection = (initialMode: AttributeSelectionMode = 'cus
             case 'minimal':
                 return 'Primary key only';
             case 'custom-lookups':
-                return 'Custom lookup attributes';
+                return 'Custom lookup columns';
             case 'all-lookups':
-                return 'All lookup attributes';
+                return 'All lookup columns';
             case 'custom':
-                return 'Pick specific attributes';
+                return 'Pick specific columns';
             default:
                 return '';
         }
