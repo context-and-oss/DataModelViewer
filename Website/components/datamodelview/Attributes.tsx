@@ -15,7 +15,7 @@ import LookupAttribute from "./attributes/LookupAttribute"
 import StatusAttribute from "./attributes/StatusAttribute"
 import StringAttribute from "./attributes/StringAttribute"
 import React from "react"
-import { highlightMatch } from "../datamodelview/List";
+import { highlightMatch, highlightTypeMatch } from "@/lib/searchHighlight";
 import { Box, Button, FormControl, InputAdornment, InputLabel, MenuItem, Select, Table, TableBody, TableCell, TableHead, TableRow, TextField, Tooltip, Typography, useTheme } from "@mui/material"
 import { ClearRounded, SearchRounded, Visibility, VisibilityOff, ArrowUpwardRounded, ArrowDownwardRounded } from "@mui/icons-material"
 import { useEntityFiltersDispatch } from "@/contexts/EntityFiltersContext"
@@ -151,6 +151,8 @@ export const Attributes = ({ entity, search = "", onVisibleCountChange }: IAttri
     // Use internal search query first, or parent search if column scopes are enabled
     const highlightTerm = searchQuery ||
         (search && (searchScope.columnNames || searchScope.columnDescriptions || searchScope.columnDataTypes) ? search : "");
+
+    const typeHighlightTerm = searchQuery || (searchScope.columnDataTypes ? search : "");
 
     // Notify parent of visible count changes
     useEffect(() => {
@@ -416,7 +418,7 @@ export const Attributes = ({ entity, search = "", onVisibleCountChange }: IAttri
                                     <TableCell className="break-words py-1 md:py-1.5 text-xs md:text-sm">
                                         {highlightMatch(attribute.SchemaName, highlightTerm)}
                                     </TableCell>
-                                    <TableCell className="break-words py-1 md:py-1.5">{getAttributeComponent(entity, attribute, highlightMatch, highlightTerm)}</TableCell>
+                                    <TableCell className="break-words py-1 md:py-1.5">{getAttributeComponent(entity, attribute, highlightTypeMatch, typeHighlightTerm)}</TableCell>
                                     <TableCell className="py-1 md:py-1.5"><AttributeDetails entityName={entity.SchemaName} attribute={attribute} isEntityAuditEnabled={entity.IsAuditEnabled} /></TableCell>
                                     <TableCell className="break-words py-1 md:py-1.5 text-xs md:text-sm">
                                         {highlightMatch(attribute.Description ?? "", highlightTerm)}
@@ -442,11 +444,11 @@ function getAttributeComponent(entity: EntityType, attribute: AttributeType, hig
         case 'GenericAttribute':
             return <GenericAttribute key={key} attribute={attribute} highlightMatch={highlightMatch} highlightTerm={highlightTerm} />;
         case 'IntegerAttribute':
-            return <IntegerAttribute key={key} attribute={attribute} />;
+            return <IntegerAttribute key={key} attribute={attribute} highlightMatch={highlightMatch} highlightTerm={highlightTerm} />;
         case 'LookupAttribute':
-            return <LookupAttribute key={key} attribute={attribute} />;
+            return <LookupAttribute key={key} attribute={attribute} highlightMatch={highlightMatch} highlightTerm={highlightTerm} />;
         case 'DecimalAttribute':
-            return <DecimalAttribute key={key} attribute={attribute} />;
+            return <DecimalAttribute key={key} attribute={attribute} highlightMatch={highlightMatch} highlightTerm={highlightTerm} />;
         case 'StatusAttribute':
             return <StatusAttribute key={key} attribute={attribute} highlightMatch={highlightMatch} highlightTerm={highlightTerm} />;
         case 'StringAttribute':
@@ -454,7 +456,7 @@ function getAttributeComponent(entity: EntityType, attribute: AttributeType, hig
         case 'BooleanAttribute':
             return <BooleanAttribute key={key} attribute={attribute} highlightMatch={highlightMatch} highlightTerm={highlightTerm} />;
         case 'FileAttribute':
-            return <FileAttribute key={key} attribute={attribute} />;
+            return <FileAttribute key={key} attribute={attribute} highlightMatch={highlightMatch} highlightTerm={highlightTerm} />;
         default:
             return null;
     }
