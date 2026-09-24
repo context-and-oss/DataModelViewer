@@ -1,5 +1,6 @@
 'use client'
 
+import { columnMatchesSearch } from "@/lib/columnSearch"
 import { EntityType, AttributeType } from "@/lib/Types"
 import { useState, useEffect } from "react"
 import { AttributeDetails } from "./entity/AttributeDetails"
@@ -105,7 +106,7 @@ export const Attributes = ({ entity, search = "", onVisibleCountChange }: IAttri
         // Also filter by parent search prop if provided
         if (search && search.length >= 3) {
             const query = search.toLowerCase()
-            filteredAttributes = filteredAttributes.filter(attr => attributeMatchesSearch(attr, query))
+            filteredAttributes = filteredAttributes.filter(attr => columnMatchesSearch(attr, query, searchScope))
         }
 
         if (hideStandardFields) filteredAttributes = filteredAttributes.filter(attr => (attr.IsCustomAttribute || attr.IsStandardFieldModified) && !attr.SchemaName.endsWith("Base"));
