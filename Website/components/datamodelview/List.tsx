@@ -16,13 +16,7 @@ interface IListProps {
     entityActiveTabs: Map<string, number>;
 }
 
-// Helper to highlight search matches
-export function highlightMatch(text: string, search: string) {
-    if (!search || search.length < 3) return text;
-    const idx = text.toLowerCase().indexOf(search.toLowerCase());
-    if (idx === -1) return text;
-    return <>{text.slice(0, idx)}<mark className="bg-yellow-200 text-black px-0.5 rounded">{text.slice(idx, idx + search.length)}</mark>{text.slice(idx + search.length)}</>;
-}
+export { highlightMatch } from "@/lib/searchHighlight";
 
 export const List = ({ setCurrentIndex, entityActiveTabs }: IListProps) => {
     const dispatch = useDatamodelViewDispatch();
@@ -56,7 +50,7 @@ export const List = ({ setCurrentIndex, entityActiveTabs }: IListProps) => {
 
     // Only recalculate items when filtered or search changes
     const flatItems = useMemo(() => {
-        if (filtered && filtered.length > 0) return filtered.filter(item => item.type !== 'attribute' && item.type !== 'relationship');
+        if (search.length >= 3) return filtered.filter(item => item.type !== 'attribute' && item.type !== 'relationship');
 
         const lowerSearch = search.trim().toLowerCase();
         const items: Array<

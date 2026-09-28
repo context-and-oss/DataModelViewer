@@ -1,5 +1,7 @@
 'use client'
 
+import { useDatamodelData } from "@/contexts/DatamodelDataContext";
+import { highlightMatch } from "@/lib/searchHighlight";
 import { EntityType } from "@/lib/Types";
 import { EntityDetails } from "./EntityDetails";
 import { Box, Typography, Paper, useTheme, Tooltip } from '@mui/material';
@@ -10,6 +12,7 @@ import { useSnackbar } from "@/contexts/SnackbarContext";
 
 export function EntityHeader({ entity }: { entity: EntityType }) {
     const theme = useTheme();
+    const { search, searchScope } = useDatamodelData();
     const { showSnackbar } = useSnackbar();
     
     const handleCopyLink = useCallback(async () => {
@@ -127,7 +130,7 @@ export function EntityHeader({ entity }: { entity: EntityType }) {
                             lineHeight: 1.6
                         }}
                     >
-                        {entity.Description}
+                        {highlightMatch(entity.Description, searchScope.tableDescriptions ? search : "")}
                     </Typography>
                 </Paper>
             )}

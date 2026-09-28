@@ -3,14 +3,14 @@ import { useDatamodelView, useDatamodelViewDispatch } from "@/contexts/Datamodel
 import { Box, Typography, Button, Chip } from "@mui/material"
 import { ContentPasteOffRounded, ContentPasteSearchRounded } from "@mui/icons-material";
 
-export default function LookupAttribute({ attribute }: { attribute: LookupAttributeType }) {
+export default function LookupAttribute({ attribute, highlightMatch = text => text, highlightTerm = "" }: { attribute: LookupAttributeType, highlightMatch?: (text: string, term: string) => string | React.JSX.Element, highlightTerm?: string }) {
 
     const { scrollToSection } = useDatamodelView();
     const dispatch = useDatamodelViewDispatch();
 
     return (
         <Box className="flex flex-wrap items-center gap-1 md:gap-2">
-            <Typography className="font-semibold text-xs md:font-bold md:text-sm">Lookup</Typography>
+            <Typography className="font-semibold text-xs md:font-bold md:text-sm">{highlightMatch("Lookup", highlightTerm)}</Typography>
             <Box className="flex flex-wrap gap-1">
                 {attribute.Targets
                     .map(target => target.IsInSolution ? 
@@ -35,12 +35,12 @@ export default function LookupAttribute({ attribute }: { attribute: LookupAttrib
                                 }
                             }}
                         >
-                            {target.Name}
+                            {highlightMatch(target.Name, highlightTerm)}
                         </Button> : 
                         <Chip 
                             key={target.Name}
                             icon={<ContentPasteOffRounded className="w-2 h-2 md:w-3 md:h-3" />}
-                            label={target.Name}
+                            label={highlightMatch(target.Name, highlightTerm)}
                             size="small"
                             disabled
                             sx={{
