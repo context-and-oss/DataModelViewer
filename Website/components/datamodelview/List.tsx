@@ -274,10 +274,13 @@ export const List = ({ setCurrentIndex, entityActiveTabs }: IListProps) => {
 
             requestAnimationFrame(() => {
                 rowVirtualizer.scrollToIndex(index, { align: 'start' });
+                // Re-selecting an aligned table does not emit a scroll event.
+                // Finish navigation once the target is mounted and aligned.
+                dispatch({ type: 'SET_LOADING_SECTION', payload: null });
             });
         };
         requestAnimationFrame(tryFix);
-    }, [rowVirtualizer]);
+    }, [rowVirtualizer, dispatch]);
 
     return (
         <>
@@ -294,15 +297,15 @@ export const List = ({ setCurrentIndex, entityActiveTabs }: IListProps) => {
             >
                 <Container maxWidth="xl">
 
-                    {/* Show no results message when searching but no items found */}
-                    {flatItems.length === 0 && search && search.length >= 3 && (
-                        <div className="flex flex-col items-center justify-center h-64 text-gray-500">
-                            <div className="text-lg font-medium mb-2">No tables found</div>
-                            <div className="text-sm text-center">
-                                No attributes match your search for &quot;{search}&quot;
-                            </div>
+                {/* Show no results message when searching but no items found */}
+                {flatItems.length === 0 && search && search.length >= 3 && (
+                    <div className="flex flex-col items-center justify-center h-64 text-gray-500">
+                        <div className="text-lg font-medium mb-2">No tables found</div>
+                        <div className="text-sm text-center">
+                            No columns match your search for &quot;{search}&quot;
                         </div>
-                    )}
+                    </div>
+                )}
 
                     {/* Virtualized list */}
                     <div

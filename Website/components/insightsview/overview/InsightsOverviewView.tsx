@@ -850,7 +850,7 @@ const InsightsOverviewView = ({ }: InsightsOverviewViewProps) => {
                                 }
                             ]}
                             role="application"
-                            ariaLabel="Attribute process dependencies by detection source"
+                            ariaLabel="Column process dependencies by detection source"
                             barAriaLabel={e => `${e.id}: ${e.formattedValue}`}
                             theme={{
                                 background: 'transparent',

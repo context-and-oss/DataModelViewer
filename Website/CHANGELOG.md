@@ -1,3 +1,27 @@
+## [2.3.8] - 2026-10-02
+
+### Features
+
+* npm audit fix for newer packages ([eb3a534](https://github.com/context-and-oss/DataModelViewer/commit/eb3a534))
+
+### Bug Fixes
+
+* fix(website): declare @emotion/react and @emotion/styled as dependencies ([da97e78](https://github.com/context-and-oss/DataModelViewer/commit/da97e78))
+
+
+## [2.3.7] - 2026-09-23
+
+### Bug Fixes
+
+* fix(website): finish loading on repeated table navigation ([7b0ddb6](https://github.com/context-and-oss/DataModelViewer/commit/7b0ddb6))
+
+## [2.3.6] - 2026-09-15
+
+### Bug Fixes
+
+* fix(website): use columns consistently in UI text ([932862e](https://github.com/context-and-oss/DataModelViewer/commit/932862e))
+
+
 ## [2.3.5] - 2026-06-05
 
 ### Other Changes
