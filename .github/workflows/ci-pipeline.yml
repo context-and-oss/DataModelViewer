@@ -6,6 +6,12 @@ on:
   pull_request:
     branches: [ "main" ]
 
+# Both jobs only build and test the checked-out code; neither writes back to
+# the repo or calls the API. Without this, GITHUB_TOKEN falls back to the
+# repository default, which is broader than anything here needs.
+permissions:
+  contents: read
+
 jobs:
   generator:
     runs-on: ubuntu-latest
