@@ -1,3 +1,14 @@
+## [2.3.8] - 2026-10-02
+
+### Features
+
+* npm audit fix for newer packages ([eb3a534](https://github.com/context-and-oss/DataModelViewer/commit/eb3a534))
+
+### Bug Fixes
+
+* fix(website): declare @emotion/react and @emotion/styled as dependencies ([da97e78](https://github.com/context-and-oss/DataModelViewer/commit/da97e78))
+
+
 ## [2.3.7] - 2026-09-23
 
 ### Bug Fixes
