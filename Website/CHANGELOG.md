@@ -1,3 +1,14 @@
+## [2.3.9] - 2026-10-05
+
+### Bug Fixes
+
+* fix(website): preserve keyboard scrolling in metadata margins ([30fb3d3](https://github.com/context-and-oss/DataModelViewer/commit/30fb3d3))
+
+### Other Changes
+
+* rebase to main ([c9e7055](https://github.com/context-and-oss/DataModelViewer/commit/c9e7055))
+
+
 ## [2.3.8] - 2026-10-02
 
 ### Features

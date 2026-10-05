@@ -9,7 +9,7 @@ export default function Data() {
     <Suspense>
       <DatamodelViewProvider>
         <EntityFiltersProvider>
-          <Layout>
+          <Layout ignoreMargins>
             <DatamodelView />
           </Layout>
         </EntityFiltersProvider>
