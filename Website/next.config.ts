@@ -7,6 +7,11 @@ const nextConfig = {
   turbopack: {
     root: path.join(__dirname, '..'),
   },
+  experimental: {
+    // Deployments overwrite the build in place. Pages cached on disk at runtime
+    // would survive the next deployment and reference static chunks that no longer exist.
+    isrFlushToDisk: false,
+  },
   async headers() {
     return [
       {
