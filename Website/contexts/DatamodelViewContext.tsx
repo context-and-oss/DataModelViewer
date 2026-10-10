@@ -7,7 +7,7 @@ import { createContext, ReactNode, useContext, useEffect, useReducer, useRef } f
 export interface DatamodelViewState {
     currentGroup: string | null;
     currentSection: string | null;
-    scrollToSection: (sectionId: string) => void;
+    scrollToSection: (sectionId: string, revealIfFiltered?: boolean) => void;
     scrollToGroup: (groupName: string) => void;
     scrollToAttribute: (sectionId: string, attrSchema: string) => void;
     scrollToRelationship: (sectionId: string, relSchema: string) => void;
@@ -31,7 +31,7 @@ const initialState: DatamodelViewState = {
 type DatamodelViewAction =
     | { type: 'SET_CURRENT_GROUP', payload: string | null }
     | { type: 'SET_CURRENT_SECTION', payload: string | null }
-    | { type: 'SET_SCROLL_TO_SECTION', payload: (sectionId: string) => void }
+    | { type: 'SET_SCROLL_TO_SECTION', payload: (sectionId: string, revealIfFiltered?: boolean) => void }
     | { type: 'SET_SCROLL_TO_GROUP', payload: (groupName: string) => void }
     | { type: 'SET_LOADING', payload: boolean }
     | { type: 'SET_LOADING_SECTION', payload: string | null }
