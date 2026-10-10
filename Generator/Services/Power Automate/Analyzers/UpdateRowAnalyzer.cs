@@ -11,7 +11,7 @@ public class UpdateRowAnalyzer : DataverseActionAnalyzerBase
 {
     public override IEnumerable<string> SupportedOperationIds => new[]
     {
-        "UpdateRow", "UpdateRecord", "UpdateItem", "PatchItem"
+        "UpdateRow", "UpdateRecord", "UpdateOnlyRecord", "UpdateItem", "PatchItem"
     };
 
     public override ActionAnalysisResult Analyze(JToken action, string actionName)
