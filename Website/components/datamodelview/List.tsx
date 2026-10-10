@@ -56,7 +56,7 @@ export const List = ({ setCurrentIndex, entityActiveTabs }: IListProps) => {
 
     // Only recalculate items when filtered or search changes
     const flatItems = useMemo(() => {
-        if (filtered && filtered.length > 0) return filtered.filter(item => item.type !== 'attribute' && item.type !== 'relationship');
+        if (search.length >= 3) return filtered.filter(item => item.type !== 'attribute' && item.type !== 'relationship');
 
         const lowerSearch = search.trim().toLowerCase();
         const items: Array<
