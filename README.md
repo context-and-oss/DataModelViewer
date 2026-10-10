@@ -51,7 +51,7 @@ The pipeline expects a variable group called `DataModel`. It must have the follo
 * AzureLocation: Name of the location for the resource group in Azure (e.g. "westeurope" - not the display name which is "West Europe").
 * AzureResourceGroupName: Name of the Resource Group in Azure. If this matches an existing group in the location above that will be used for the DMV resources, if not a new resource group will be created.
 * DataverseUrl: URL for the Dataverse environment which the data model will be based on (e.g. "https://mySystem-dev.crm4.dynamics.com/").
-* DataverseSolutionNames: Comma-seperated list of solutions to based DMV on. Use the logical names (not display names).
+* DataverseSolutionNames: Required comma-separated list of solution unique names (not display names). Whitespace, empty entries between commas, and duplicate names are ignored. Generation stops if no names remain or any requested solution cannot be found in the configured Dataverse environment.
 * WebsiteName: Used for the url of the web app presenting the data model to the user. The full URL will be in the format "https://wa-{WebsiteName}.azurewebsites.net/" and must be globally unique. 
 * WebsitePassword: Password used by DMV users to login to the generated site.
 * WebsiteSessionSecret: Key to encrypt the session token with (You can set it to whatever you like, but recommended 32 random characters).
@@ -167,3 +167,7 @@ openssl rand -base64 32
 ## Running it
 Generate data by running the Generator project from Visual Studio. 
 Afterwards go into the "Website"-folder from VS Code and open the terminal (of the "Command Prompt" type). If this the first time running it, type `npm install` (you need to have installed node.js first: https://nodejs.org/en/download/). Start the website on localhost by running `npm run dev`. Click the link in the terminal to view the website.
+
+To use a different local port, run `npm run dev -- --port 3017`. Login redirects use the request origin unless `AUTH_URL` or `NEXTAUTH_URL` overrides it (`AUTH_URL` takes precedence). If a redirect points to an old host or port, check these environment settings and restart the website after changing them.
+
+When hosting behind a reverse proxy or using a custom domain, set `AUTH_URL` to the public website origin, including its scheme and any non-default port. Do not use the internal application server address or rely on forwarded host headers alone. The supplied Azure infrastructure sets `NEXTAUTH_URL` to the generated App Service HTTPS address; update the auth URL setting when using a different public domain.

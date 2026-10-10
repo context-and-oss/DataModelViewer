@@ -27,12 +27,7 @@ namespace Generator.Services
         /// </summary>
         public async Task<(List<Guid> SolutionIds, List<Entity> SolutionEntities)> GetSolutionIds()
         {
-            var solutionNameArg = configuration["DataverseSolutionNames"];
-            if (solutionNameArg == null)
-            {
-                throw new Exception("Specify one or more solutions");
-            }
-            var solutionNames = solutionNameArg.Split(",").Select(x => x.Trim().ToLower()).ToList();
+            var solutionNames = SolutionSelection.Parse(configuration["DataverseSolutionNames"]);
 
             var entities = await client.RetrieveAllAsync(new QueryExpression("solution")
             {
@@ -45,6 +40,8 @@ namespace Generator.Services
                     }
                 }
             });
+
+            SolutionSelection.ValidateMatches(solutionNames, entities.Select(e => e.GetAttributeValue<string>("uniquename")));
 
             return (entities.Select(e => e.GetAttributeValue<Guid>("solutionid")).ToList(), entities);
         }
