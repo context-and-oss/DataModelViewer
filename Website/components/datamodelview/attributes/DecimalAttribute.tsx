@@ -1,37 +1,16 @@
 import { DecimalAttributeType } from "@/lib/Types"
-import { formatNumberSeperator } from "@/lib/utils"
+import { decimalRange, precisionText } from "@/lib/columnTypeText"
 import { Typography } from "@mui/material"
 
-export default function MoneyAttribute({ attribute }: { attribute: DecimalAttributeType }) {
-    const formatNumber =
-        attribute.Type === "Money"
-            ? FormatMoney
-            : FormatDecimal
-
+export default function MoneyAttribute({ attribute, highlightMatch = text => text, highlightTerm = "" }: { attribute: DecimalAttributeType, highlightMatch?: (text: string, term: string) => string | React.JSX.Element, highlightTerm?: string }) {
     return (
         <>
             <Typography component="p">
-                <Typography component="span" className="font-semibold text-xs md:font-bold md:text-sm">{attribute.Type}</Typography>
+                <Typography component="span" className="font-semibold text-xs md:font-bold md:text-sm">{highlightMatch(attribute.Type, highlightTerm)}</Typography>
                 {" "}
-                <Typography component="span" className="text-xs md:text-sm">({formatNumber(attribute.MinValue)} to {formatNumber(attribute.MaxValue)})</Typography>
+                <Typography component="span" className="text-xs md:text-sm">{highlightMatch(decimalRange(attribute), highlightTerm)}</Typography>
             </Typography>
-            <Typography component="p" className="text-xs md:text-sm">Precision: {attribute.Precision}</Typography>
+            <Typography component="p" className="text-xs md:text-sm">{highlightMatch(precisionText(attribute.Precision), highlightTerm)}</Typography>
         </>
     )
-}
-
-function FormatMoney(number: number) {
-    if (number === 922337203685477)
-        return "Max"
-    if (number === -922337203685477)
-        return "Min"
-    return formatNumberSeperator(number)
-}
-
-function FormatDecimal(number: number) {
-    if (number === 100000000000)
-        return "Max"
-    if (number === -100000000000)
-        return "Min"
-    return formatNumberSeperator(number)
 }

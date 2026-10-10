@@ -13,11 +13,11 @@ export default function ChoiceAttribute({ attribute, highlightMatch, highlightTe
         <Box className="flex flex-col gap-1">
             <Box className="flex items-center gap-2">
                 <OptionSetScopeIndicator globalOptionSetName={attribute.GlobalOptionSetName} />
-                <Typography className="font-semibold text-xs md:text-sm md:font-bold">{attribute.Type}-select</Typography>
+                <Typography className="font-semibold text-xs md:text-sm md:font-bold">{highlightMatch(`${attribute.Type}-select`, highlightTerm)}</Typography>
                 {attribute.DefaultValue !== null && attribute.DefaultValue !== -1 && !isMobile && (
                     <Chip
                         icon={<CheckRounded className="w-2 h-2 md:w-3 md:h-3" />}
-                        label={`Default: ${attribute.Options.find(o => o.Value === attribute.DefaultValue)?.Name}`}
+                        label={highlightMatch(`Default: ${attribute.Options.find(o => o.Value === attribute.DefaultValue)?.Name}`, highlightTerm)}
                         size="small"
                         color="success"
                         variant="outlined"
@@ -61,7 +61,7 @@ export default function ChoiceAttribute({ attribute, highlightMatch, highlightTe
                             </Box>
                             <Box className="flex items-center gap-2">
                                 <Chip 
-                                    label={formatNumberSeperator(option.Value)}
+                                    label={highlightMatch(formatNumberSeperator(option.Value), highlightTerm)}
                                     size="small"
                                     sx={{ 
                                         fontSize: { xs: '0.625rem', md: '0.875rem' },
@@ -78,7 +78,7 @@ export default function ChoiceAttribute({ attribute, highlightMatch, highlightTe
                                 className="text-xs italic pl-4 break-words md:pl-6"
                                 sx={{ color: 'text.secondary' }}
                             >
-                                {option.Description}
+                                {highlightMatch(option.Description, highlightTerm)}
                             </Typography>
                         )}
                     </Box>
