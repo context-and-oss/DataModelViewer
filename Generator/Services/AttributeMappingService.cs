@@ -61,13 +61,7 @@ namespace Generator.Services
             // Get workflow dependency usages
             var workflowUsages = workflowDependencies
                 .GetValueOrDefault(metadata.MetadataId!.Value, [])
-                .Select(w => new AttributeUsage(
-                    Name: w.Name,
-                    Usage: DetermineWorkflowUsageContext(w),
-                    OperationType: OperationType.Other,
-                    ComponentType: w.Category == 2 ? ComponentType.BusinessRule : ComponentType.ClassicWorkflow,
-                    IsFromDependencyAnalysis: true
-                ))
+                .Select(w => w.ToAttributeUsage())
                 .ToList();
 
             // Combine both sources
@@ -84,22 +78,6 @@ namespace Generator.Services
                 ?? componentSolutionMap.GetValueOrDefault(entity.MetadataId!.Value, new List<SolutionInfo>());
 
             return attr;
-        }
-
-        /// <summary>
-        /// Determines the usage context string for a workflow
-        /// </summary>
-        private static string DetermineWorkflowUsageContext(WorkflowInfo workflow)
-        {
-            return workflow.Category switch
-            {
-                2 => "Business Rule",
-                0 => "Workflow",
-                3 => "Action",
-                4 => "Business Process Flow",
-                5 => "Dialog",
-                _ => "Workflow"
-            };
         }
     }
 }

@@ -141,6 +141,42 @@ public class PowerAutomateFlowAnalyzerTests : TestBase
     }
 
     [Fact]
+    public async Task AnalyzeComponentAsync_WithUpdateOnlyRecord_ShouldExtractCloudFlowUpdateUsage()
+    {
+        var action = JObject.Parse(@"{
+            'type': 'OpenApiConnection',
+            'inputs': {
+                'host': {
+                    'apiId': '/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps',
+                    'operationId': 'UpdateOnlyRecord'
+                },
+                'parameters': {
+                    'entityName': 'dmvp_planets',
+                    'recordId': '00000000-0000-0000-0000-000000000001',
+                    'item/dmvp_weight': 42
+                }
+            }
+        }");
+        var flowJson = new PowerAutomateFlowBuilder()
+            .AddAction("Update_planet", action)
+            .BuildAsJson();
+        var flow = new PowerAutomateFlow("synthetic-flow", "Playground weight update", flowJson);
+        var attributeUsages = new Dictionary<string, Dictionary<string, List<AttributeUsage>>>();
+        var warnings = new List<SolutionWarning>();
+
+        await FlowAnalyzer.AnalyzeComponentAsync(flow, attributeUsages, warnings);
+
+        Assert.True(attributeUsages.ContainsKey("dmvp_planets"));
+        Assert.True(attributeUsages["dmvp_planets"].ContainsKey("dmvp_weight"));
+        var usage = Assert.Single(attributeUsages["dmvp_planets"]["dmvp_weight"]);
+        Assert.Equal("Playground weight update", usage.Name);
+        Assert.Equal(OperationType.Update, usage.OperationType);
+        Assert.Equal(ComponentType.PowerAutomateFlow, usage.ComponentType);
+        Assert.False(usage.IsFromDependencyAnalysis);
+        Assert.Contains("Update parameter", usage.Usage);
+        Assert.Empty(warnings);
+    }
+    [Fact]
     public async Task AnalyzeComponentAsync_WithUpdateRowAction_ShouldNotThrow()
     {
         // Arrange

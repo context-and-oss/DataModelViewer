@@ -1,3 +1,4 @@
+using Generator.DTO;
 using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Query;
@@ -5,7 +6,7 @@ using Microsoft.Xrm.Sdk.Query;
 namespace Generator.Services
 {
     /// <summary>
-    /// Service responsible for querying workflow details (business rules and classic workflows)
+    /// Service responsible for querying workflow details
     /// </summary>
     internal class WorkflowService
     {
@@ -64,5 +65,24 @@ namespace Generator.Services
         string Name,
         int Category,
         int Type
-    );
+    )
+    {
+        public AttributeUsage ToAttributeUsage()
+        {
+            // Dataverse category 1 is Dialog; category 5 is Modern Flow.
+            // https://learn.microsoft.com/en-us/power-automate/manage-flows-with-code
+            var (usage, componentType) = Category switch
+            {
+                1 => ("Dialog", ComponentType.ClassicWorkflow),
+                2 => ("Business Rule", ComponentType.BusinessRule),
+                3 => ("Action", ComponentType.ClassicWorkflow),
+                4 => ("Business Process Flow", ComponentType.ClassicWorkflow),
+                5 => ("Power Automate Flow", ComponentType.PowerAutomateFlow),
+                _ => ("Workflow", ComponentType.ClassicWorkflow)
+            };
+
+            return new AttributeUsage(Name, usage, OperationType.Other, componentType,
+                IsFromDependencyAnalysis: true);
+        }
+    }
 }
