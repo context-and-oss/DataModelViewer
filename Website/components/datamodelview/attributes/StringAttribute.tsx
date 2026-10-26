@@ -11,7 +11,13 @@ export default function StringAttribute({ attribute, highlightMatch, highlightTe
             <Typography component="span" className="font-semibold text-xs md:font-bold md:text-sm">{highlightMatch && highlightTerm ? highlightMatch("Text", highlightTerm) : "Text"}</Typography>
             {" "}
             <Typography component="span" className="text-xs md:text-sm">
-                ({formatNumberSeperator(attribute.MaxLength)}){attribute.Format !== "Text" ? ` - ${highlightMatch && highlightTerm ? highlightMatch(attribute.Format, highlightTerm) : attribute.Format}` : ""}
+                ({formatNumberSeperator(attribute.MaxLength)})
+                {attribute.Format !== "Text" && (
+                    <>
+                        {" - "}
+                        {highlightMatch && highlightTerm ? highlightMatch(attribute.Format, highlightTerm) : attribute.Format}
+                    </>
+                )}
             </Typography>
         </>
     );

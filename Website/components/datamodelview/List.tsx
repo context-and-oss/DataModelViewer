@@ -9,11 +9,12 @@ import { updateURL } from "@/lib/url-utils";
 import { copyToClipboard, generateGroupLink } from "@/lib/clipboard-utils";
 import { useSnackbar } from "@/contexts/SnackbarContext";
 import { useEntityFilters } from "@/contexts/EntityFiltersContext";
-import { Box, CircularProgress, debounce, Tooltip } from '@mui/material';
+import { Box, CircularProgress, Container, debounce, Tooltip } from '@mui/material';
 
 interface IListProps {
     setCurrentIndex: (index: number) => void;
     entityActiveTabs: Map<string, number>;
+    onExitSearch: () => void;
 }
 
 // Helper to highlight search matches
@@ -24,15 +25,23 @@ export function highlightMatch(text: string, search: string) {
     return <>{text.slice(0, idx)}<mark className="bg-yellow-200 text-black px-0.5 rounded">{text.slice(idx, idx + search.length)}</mark>{text.slice(idx + search.length)}</>;
 }
 
-export const List = ({ setCurrentIndex, entityActiveTabs }: IListProps) => {
+export const List = ({ setCurrentIndex, entityActiveTabs, onExitSearch }: IListProps) => {
     const dispatch = useDatamodelViewDispatch();
     const { currentSection, loadingSection } = useDatamodelView();
     const { groups, filtered, search } = useDatamodelData();
     const { selectedSecurityRoles } = useEntityFilters();
     const { showSnackbar } = useSnackbar();
     const parentRef = useRef<HTMLDivElement | null>(null);
+    // Search handlers change when scrolling updates the restore position. Keep
+    // navigation stable so callback registration cannot replay URL navigation.
+    const onExitSearchRef = useRef(onExitSearch);
+    useEffect(() => {
+        onExitSearchRef.current = onExitSearch;
+    }, [onExitSearch]);
     // used to relocate section after search/filter
     const [sectionVirtualItem, setSectionVirtualItem] = useState<string | null>(null);
+
+    const [pendingSection, setPendingSection] = useState<string | null>(null);
 
     // Helper function to check if entity has access from selected security roles
     const hasSecurityRoleAccess = useCallback((entity: EntityType): boolean => {
@@ -179,19 +188,28 @@ export const List = ({ setCurrentIndex, entityActiveTabs }: IListProps) => {
         rowVirtualizer.shouldAdjustScrollPositionOnItemSizeChange = () => false;
     }, [rowVirtualizer]);
 
-    const scrollToSection = useCallback((sectionId: string) => {
+    const scrollToSection = useCallback((sectionId: string, revealIfFiltered = false) => {
         const sectionIndex = flatItems.findIndex(item =>
             item.type === 'entity' && item.entity.SchemaName === sectionId
         );
 
         if (sectionIndex === -1) {
-            console.warn(`Section ${sectionId} not found in virtualized list`);
+            if (!revealIfFiltered) return;
+            const target = groups.flatMap(group => group.Entities).find(entity => entity.SchemaName === sectionId);
+            if (search && target && (selectedSecurityRoles.length === 0 || hasSecurityRoleAccess(target))) {
+                // Retry after clearing search has restored the destination to the list.
+                setPendingSection(sectionId);
+                onExitSearchRef.current();
+            } else {
+                dispatch({ type: 'SET_LOADING_SECTION', payload: null });
+                showSnackbar('This table is not available with the current filters.', 'info');
+            }
             return;
         }
 
         smartScrollToIndex(sectionIndex);
 
-    }, [flatItems]);
+    }, [flatItems, groups, search, selectedSecurityRoles, hasSecurityRoleAccess, dispatch, showSnackbar]);
 
     const scrollToAttribute = useCallback((sectionId: string, attrSchema: string) => {
         const attrId = `attr-${sectionId}-${attrSchema}`;
@@ -274,86 +292,117 @@ export const List = ({ setCurrentIndex, entityActiveTabs }: IListProps) => {
 
             requestAnimationFrame(() => {
                 rowVirtualizer.scrollToIndex(index, { align: 'start' });
+                // Re-selecting an aligned table does not emit a scroll event.
+                // Finish navigation once the target is mounted and aligned.
+                dispatch({ type: 'SET_LOADING_SECTION', payload: null });
             });
         };
         requestAnimationFrame(tryFix);
-    }, [rowVirtualizer]);
+    }, [rowVirtualizer, dispatch]);
 
+    useEffect(() => {
+        if (!pendingSection || search) return;
+        const sectionIndex = flatItems.findIndex(item => item.type === 'entity' && item.entity.SchemaName === pendingSection);
+        if (sectionIndex === -1) {
+            dispatch({ type: 'SET_LOADING_SECTION', payload: null });
+            setPendingSection(null);
+            return;
+        }
+        const frame = requestAnimationFrame(() => {
+            smartScrollToIndex(sectionIndex);
+            const target = flatItems[sectionIndex];
+            updateURL({ query: { group: target.group.Name, section: pendingSection } });
+            dispatch({ type: 'SET_CURRENT_GROUP', payload: target.group.Name });
+            dispatch({ type: 'SET_CURRENT_SECTION', payload: pendingSection });
+            dispatch({ type: 'SET_LOADING_SECTION', payload: null });
+            setPendingSection(null);
+        });
+        return () => cancelAnimationFrame(frame);
+    }, [pendingSection, search, flatItems, smartScrollToIndex, dispatch]);
     return (
         <>
             <Box className={`absolute w-full h-full flex items-center justify-center z-[100] transition-opacity duration-300 ${loadingSection ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
                 <CircularProgress />
             </Box>
-            <div ref={parentRef} style={{ height: 'calc(100vh - var(--layout-header-desktop-height))', overflow: 'auto' }} className="relative no-scrollbar">
+            <div
+                ref={parentRef}
+                tabIndex={0}
+                role="region"
+                aria-label="Metadata tables"
+                style={{ height: 'calc(100vh - var(--layout-header-desktop-height))', overflow: 'auto' }}
+                className="relative no-scrollbar"
+            >
+                <Container maxWidth="xl">
 
                 {/* Show no results message when searching but no items found */}
                 {flatItems.length === 0 && search && search.length >= 3 && (
                     <div className="flex flex-col items-center justify-center h-64 text-gray-500">
                         <div className="text-lg font-medium mb-2">No tables found</div>
                         <div className="text-sm text-center">
-                            No attributes match your search for &quot;{search}&quot;
+                            No columns match your search for &quot;{search}&quot;
                         </div>
                     </div>
                 )}
 
-                {/* Virtualized list */}
-                <div
-                    className={`mx-6 my-6 transition-opacity duration-300 ${loadingSection ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
-                    style={{
-                        height: `${rowVirtualizer.getTotalSize()}px`,
-                        width: 'calc(100% - 48px)',
-                        position: 'relative',
-                        visibility: flatItems.length === 0 ? 'hidden' : 'visible'
-                    }}
-                >
-                    {rowVirtualizer.getVirtualItems().map((virtualItem) => {
-                        const item = flatItems[virtualItem.index];
+                    {/* Virtualized list */}
+                    <div
+                        className={`mx-6 my-6 transition-opacity duration-300 ${loadingSection ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
+                        style={{
+                            height: `${rowVirtualizer.getTotalSize()}px`,
+                            width: 'calc(100% - 48px)',
+                            position: 'relative',
+                            visibility: flatItems.length === 0 ? 'hidden' : 'visible'
+                        }}
+                    >
+                        {rowVirtualizer.getVirtualItems().map((virtualItem) => {
+                            const item = flatItems[virtualItem.index];
 
-                        return (
-                            <div
-                                key={virtualItem.key}
-                                data-index={virtualItem.index}
-                                style={{
-                                    position: 'absolute',
-                                    top: 0,
-                                    left: 0,
-                                    width: '100%',
-                                    transform: `translateY(${virtualItem.start}px)`,
-                                }}
-                                ref={(el) => {
-                                    if (el) {
-                                        rowVirtualizer.measureElement(el);
-                                    }
-                                }}
-                            >
-                                {item.type === 'group' ? (
-                                    <div className="flex items-center py-6 my-4">
-                                        <div className="flex-1 h-0.5 bg-gray-200" />
-                                        <Tooltip title="Copy link to this group">
-                                            <div
-                                                className="px-4 text-md font-semibold text-gray-700 uppercase tracking-wide whitespace-nowrap cursor-pointer hover:text-blue-600 transition-colors"
-                                                onClick={() => handleCopyGroupLink(item.group.Name)}
-                                            >
-                                                {item.group.Name}
-                                            </div>
-                                        </Tooltip>
-                                        <div className="flex-1 h-0.5 bg-gray-200" />
-                                    </div>
-                                ) : (
-                                    <div className="text-sm">
-                                        <Section
-                                            entity={item.entity}
-                                            group={item.group}
-                                            search={search}
-                                            activeTab={entityActiveTabs.get(item.entity.SchemaName)}
-                                            highlightSecurityRole={selectedSecurityRoles.length > 0 && hasSecurityRoleAccess(item.entity)}
-                                        />
-                                    </div>
-                                )}
-                            </div>
-                        );
-                    })}
-                </div>
+                            return (
+                                <div
+                                    key={virtualItem.key}
+                                    data-index={virtualItem.index}
+                                    style={{
+                                        position: 'absolute',
+                                        top: 0,
+                                        left: 0,
+                                        width: '100%',
+                                        transform: `translateY(${virtualItem.start}px)`,
+                                    }}
+                                    ref={(el) => {
+                                        if (el) {
+                                            rowVirtualizer.measureElement(el);
+                                        }
+                                    }}
+                                >
+                                    {item.type === 'group' ? (
+                                        <div className="flex items-center py-6 my-4">
+                                            <div className="flex-1 h-0.5 bg-gray-200" />
+                                            <Tooltip title="Copy link to this group">
+                                                <div
+                                                    className="px-4 text-md font-semibold text-gray-700 uppercase tracking-wide whitespace-nowrap cursor-pointer hover:text-blue-600 transition-colors"
+                                                    onClick={() => handleCopyGroupLink(item.group.Name)}
+                                                >
+                                                    {item.group.Name}
+                                                </div>
+                                            </Tooltip>
+                                            <div className="flex-1 h-0.5 bg-gray-200" />
+                                        </div>
+                                    ) : (
+                                        <div className="text-sm">
+                                            <Section
+                                                entity={item.entity}
+                                                group={item.group}
+                                                search={search}
+                                                activeTab={entityActiveTabs.get(item.entity.SchemaName)}
+                                                highlightSecurityRole={selectedSecurityRoles.length > 0 && hasSecurityRoleAccess(item.entity)}
+                                            />
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })}
+                    </div>
+                </Container>
             </div>
         </>
     );

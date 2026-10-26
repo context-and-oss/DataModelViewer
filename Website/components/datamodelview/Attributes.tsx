@@ -187,7 +187,7 @@ export const Attributes = ({ entity, search = "", onVisibleCountChange }: IAttri
             <Box className="flex gap-1 md:gap-2 items-center">
                 <TextField
                     size="small"
-                    placeholder="Search attributes..."
+                    placeholder="Search columns..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     onKeyDown={(e) => {
@@ -291,10 +291,10 @@ export const Attributes = ({ entity, search = "", onVisibleCountChange }: IAttri
                         <Box className="flex flex-col items-center gap-1">
                             <Typography variant="body2">
                                 {searchQuery && typeFilter !== "all"
-                                    ? `No ${typeFilter === "all" ? "" : typeFilter.replace("Attribute", "")} attributes found matching "${searchQuery}"`
+                                    ? `No ${typeFilter === "all" ? "" : typeFilter.replace("Attribute", "")} columns found matching "${searchQuery}"`
                                     : searchQuery
-                                        ? `No attributes found matching "${searchQuery}"`
-                                        : `No ${typeFilter === "all" ? "" : typeFilter.replace("Attribute", "")} attributes available`
+                                        ? `No columns found matching "${searchQuery}"`
+                                        : `No ${typeFilter === "all" ? "" : typeFilter.replace("Attribute", "")} columns available`
                                 }
                             </Typography>
                             <Button
@@ -309,7 +309,7 @@ export const Attributes = ({ entity, search = "", onVisibleCountChange }: IAttri
                             </Button>
                         </Box>
                     ) : (
-                        <Typography variant="body2">No attributes available for this table</Typography>
+                        <Typography variant="body2">No columns available for this table</Typography>
                     )}
                 </Box>
             ) : (
