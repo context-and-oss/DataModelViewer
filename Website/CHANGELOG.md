@@ -1,3 +1,14 @@
+## [2.3.11] - 2026-10-26
+
+### Bug Fixes
+
+* Fix cloud flow dependency classification ([2a446a4](https://github.com/context-and-oss/DataModelViewer/commit/2a446a4))
+
+### Other Changes
+
+* Include current cloud-flow actions and whole-table workflow dependencies ([912cb50](https://github.com/context-and-oss/DataModelViewer/commit/912cb50))
+
+
 ## [2.3.10] - 2026-10-23
 
 ### Bug Fixes
