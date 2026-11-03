@@ -46,6 +46,11 @@ steps:
       AZURE_CLIENT_SECRET: ${{ parameters.azureClientSecret }}
       DataverseUrl: ${{ parameters.dataverseUrl }}
 
+  - task: UseNode@1
+    displayName: "Use Node.js 24"
+    inputs:
+      version: "24.x"
+
   - script: npx tsx scripts/downloadWikiContent.ts
     workingDirectory: $(Build.SourcesDirectory)/Website
     displayName: Download Introduction Wiki Page and Attachments
@@ -56,12 +61,6 @@ steps:
       SYSTEM_ACCESSTOKEN: $(System.AccessToken)
       WIKI_NAME: ${{ parameters.adoWikiName}}
       WIKI_PAGE_PATH: ${{ parameters.adoWikiPagePath}}
-
-  - task: NodeTool@0
-    displayName: "Install Node.js"
-    inputs:
-      versionSpec: "20.x"
-      displayName: "Install Node.js"
 
   - script: npm install && npm run build && mv .next/static .next/standalone/.next/static && mv public .next/standalone/public
     workingDirectory: $(Build.SourcesDirectory)/Website
