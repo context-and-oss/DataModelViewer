@@ -1,3 +1,10 @@
+## [2.3.12] - 2026-11-09
+
+### Bug Fixes
+
+* fix(pipeline): replace deprecated NodeTool@0 with UseNode@1 on Node 24 ([c652daa](https://github.com/context-and-oss/DataModelViewer/commit/c652daa))
+
+
 ## [2.3.11] - 2026-10-26
 
 ### Bug Fixes
