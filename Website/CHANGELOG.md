@@ -1,3 +1,10 @@
+## [2.3.13] - 2026-11-13
+
+### Other Changes
+
+* Show consistent relationship behavior labels and details ([3e66acf](https://github.com/context-and-oss/DataModelViewer/commit/3e66acf))
+
+
 ## [2.3.12] - 2026-11-09
 
 ### Bug Fixes
