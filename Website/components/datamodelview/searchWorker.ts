@@ -1,3 +1,4 @@
+import { columnMatchesSearch } from "@/lib/columnSearch";
 import { GroupType, EntityType, AttributeType, RelationshipType } from "@/lib/Types";
 
 // Worker message types
@@ -134,7 +135,7 @@ self.onmessage = async function (e: MessageEvent<WorkerMessage>) {
         // Apply hideStandardFields filter
         if (entityFilter.hideStandardFields) {
           const isStandardFieldHidden = !attr.IsCustomAttribute && !attr.IsStandardFieldModified;
-          if (isStandardFieldHidden) return false;
+          if (isStandardFieldHidden || attr.SchemaName.endsWith("Base")) return false;
         }
 
         // Apply type filter
@@ -151,43 +152,7 @@ self.onmessage = async function (e: MessageEvent<WorkerMessage>) {
           }
         }
 
-        // Apply search matching based on scope
-        let matches = false;
-
-        // Column names (SchemaName and DisplayName)
-        if (searchScope.columnNames) {
-          if (attr.SchemaName.toLowerCase().includes(search)) matches = true;
-          if (attr.DisplayName && attr.DisplayName.toLowerCase().includes(search)) matches = true;
-        }
-
-        // Column descriptions
-        if (searchScope.columnDescriptions) {
-          if (attr.Description && attr.Description.toLowerCase().includes(search)) matches = true;
-        }
-
-        // Column data types
-        if (searchScope.columnDataTypes) {
-          if (attr.AttributeType.toLowerCase().includes(search)) matches = true;
-
-          // Also search in specific type properties
-          if (attr.AttributeType === 'ChoiceAttribute' || attr.AttributeType === 'StatusAttribute') {
-            if (attr.Options.some(option => option.Name.toLowerCase().includes(search))) matches = true;
-          } else if (attr.AttributeType === 'DateTimeAttribute') {
-            if (attr.Format.toLowerCase().includes(search) || attr.Behavior.toLowerCase().includes(search)) matches = true;
-          } else if (attr.AttributeType === 'IntegerAttribute') {
-            if (attr.Format.toLowerCase().includes(search)) matches = true;
-          } else if (attr.AttributeType === 'StringAttribute') {
-            if (attr.Format.toLowerCase().includes(search)) matches = true;
-          } else if (attr.AttributeType === 'DecimalAttribute') {
-            if (attr.Type.toLowerCase().includes(search)) matches = true;
-          } else if (attr.AttributeType === 'LookupAttribute') {
-            if (attr.Targets.some(target => target.Name.toLowerCase().includes(search))) matches = true;
-          } else if (attr.AttributeType === 'BooleanAttribute') {
-            if (attr.TrueLabel.toLowerCase().includes(search) || attr.FalseLabel.toLowerCase().includes(search)) matches = true;
-          }
-        }
-
-        return matches;
+        return columnMatchesSearch(attr, search, searchScope);
       });
 
       // Check for table description matches
@@ -258,6 +223,12 @@ self.onmessage = async function (e: MessageEvent<WorkerMessage>) {
         }
       }
     }
+  }
+
+  if (allItems.length === 0) {
+    const response: WorkerResponse = { type: 'results', data: [], complete: true, requestId };
+    self.postMessage(response);
+    return;
   }
 
   // Send results in chunks to prevent UI blocking
