@@ -249,7 +249,7 @@ function Keys({ entity, search = "" }: IKeysProps) {
                                     sx={{ color: 'text.primary' }}
                                 >
                                     <Box className="flex items-center">
-                                        Key Attributes
+                                        Key Columns
                                         <SortIcon column="attributes" />
                                     </Box>
                                 </TableCell>

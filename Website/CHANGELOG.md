@@ -1,3 +1,74 @@
+## [2.3.13] - 2026-11-13
+
+### Other Changes
+
+* Show consistent relationship behavior labels and details ([3e66acf](https://github.com/context-and-oss/DataModelViewer/commit/3e66acf))
+
+
+## [2.3.12] - 2026-11-09
+
+### Bug Fixes
+
+* fix(pipeline): replace deprecated NodeTool@0 with UseNode@1 on Node 24 ([c652daa](https://github.com/context-and-oss/DataModelViewer/commit/c652daa))
+
+
+## [2.3.11] - 2026-10-26
+
+### Bug Fixes
+
+* Fix cloud flow dependency classification ([2a446a4](https://github.com/context-and-oss/DataModelViewer/commit/2a446a4))
+
+### Other Changes
+
+* Include current cloud-flow actions and whole-table workflow dependencies ([912cb50](https://github.com/context-and-oss/DataModelViewer/commit/912cb50))
+
+
+## [2.3.10] - 2026-10-23
+
+### Bug Fixes
+
+* fix(website): follow lookup links outside search results ([5056753](https://github.com/context-and-oss/DataModelViewer/commit/5056753))
+
+### Other Changes
+
+* Keep metadata navigation stable during scrolling ([970673a](https://github.com/context-and-oss/DataModelViewer/commit/970673a))
+
+
+## [2.3.9] - 2026-10-05
+
+### Bug Fixes
+
+* fix(website): preserve keyboard scrolling in metadata margins ([30fb3d3](https://github.com/context-and-oss/DataModelViewer/commit/30fb3d3))
+
+### Other Changes
+
+* rebase to main ([c9e7055](https://github.com/context-and-oss/DataModelViewer/commit/c9e7055))
+
+
+## [2.3.8] - 2026-10-02
+
+### Features
+
+* npm audit fix for newer packages ([eb3a534](https://github.com/context-and-oss/DataModelViewer/commit/eb3a534))
+
+### Bug Fixes
+
+* fix(website): declare @emotion/react and @emotion/styled as dependencies ([da97e78](https://github.com/context-and-oss/DataModelViewer/commit/da97e78))
+
+
+## [2.3.7] - 2026-09-23
+
+### Bug Fixes
+
+* fix(website): finish loading on repeated table navigation ([7b0ddb6](https://github.com/context-and-oss/DataModelViewer/commit/7b0ddb6))
+
+## [2.3.6] - 2026-09-15
+
+### Bug Fixes
+
+* fix(website): use columns consistently in UI text ([932862e](https://github.com/context-and-oss/DataModelViewer/commit/932862e))
+
+
 ## [2.3.5] - 2026-06-05
 
 ### Other Changes

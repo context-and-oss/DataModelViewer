@@ -421,7 +421,7 @@ export const Relationships = ({ entity, search = "", onVisibleCountChange }: IRe
                                                 onClick={() => {
                                                     dispatch({ type: 'SET_LOADING_SECTION', payload: relationship.TableSchema });
                                                     dispatch({ type: "SET_CURRENT_SECTION", payload: relationship.TableSchema });
-                                                    scrollToSection(relationship.TableSchema);
+                                                    scrollToSection(relationship.TableSchema, true);
                                                 }}
                                                 sx={{
                                                     fontSize: { xs: '0.625rem', md: '0.875rem' },

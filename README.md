@@ -93,6 +93,7 @@ Once you have created the variable group mentioned in the previous section, next
 - The used Azure subscription must have "Microsoft.Web" registered as a "Resource provider" (namespace) otherwise the deploy will fail.
 - The external pipeline expects the same variable group and variables as described in the "Setting in pipeline" section.
 - You can further customize the pipeline by editing the YAML files as needed for your organization's requirements.
+- The pipeline clones the latest DataModelViewer source on every run, but the YAML files you copied stay as they were. When a release changes the files in `Setup/`, copy them into your repository again.
 - For more details, see the comments at the top of `azure-pipelines-external.yml`.
 
 ## After deployment
