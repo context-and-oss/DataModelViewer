@@ -1,3 +1,10 @@
+## [2.3.14] - 2026-11-13
+
+### Bug Fixes
+
+* Fix scoped global column search results ([0b84f7d](https://github.com/context-and-oss/DataModelViewer/commit/0b84f7d))
+
+
 ## [2.3.13] - 2026-11-13
 
 ### Other Changes
