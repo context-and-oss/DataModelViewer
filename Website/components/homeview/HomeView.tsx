@@ -26,7 +26,7 @@ export const HomeView = ({ }: IHomeViewProps) => {
         {
             image: '/insights.jpg',
             title: 'New Search features!',
-            text: 'Enhanced global search with customizable scope filters—search across attributes, descriptions, data types, relationships, and more. New security role impersonation lets you filter entities by access permissions, making it easy to understand what data different roles can see. All filters are shareable via URL for seamless collaboration.',
+            text: 'Enhanced global search with customizable scope filters—search across columns, descriptions, data types, relationships, and more. New security role impersonation lets you filter entities by access permissions, making it easy to understand what data different roles can see. All filters are shareable via URL for seamless collaboration.',
             type: '(v2.3.1) Feature Update',
             actionlabel: 'Try It Now',
             action: () => router.push('/metadata')

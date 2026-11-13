@@ -79,7 +79,7 @@ export const Section = React.memo(
                                     label={
                                         <div className="flex items-center min-w-[120px] sm:min-w-[140px] px-2 py-1 text-xs sm:text-sm">
                                             <SellRounded className="mr-2 h-4 w-4 shrink-0" />
-                                            <span className="truncate">Attributes [{visibleAttributeCount}]</span>
+                                            <span className="truncate">Columns [{visibleAttributeCount}]</span>
                                         </div>
                                     }
                                 />

@@ -58,7 +58,7 @@ export const TimeSlicedSearch = ({
   initialLocalValue,
   currentIndex,
   totalResults,
-  placeholder = "Search attributes...",
+  placeholder = "Search columns...",
   onSearchScopeChange,
 }: TimeSlicedSearchProps) => {
   const searchParams = useSearchParams();
@@ -440,7 +440,7 @@ export const TimeSlicedSearch = ({
             className='ml-1 flex-1'
             type="text"
             placeholder={placeholder}
-            aria-label="Search attributes in tables"
+            aria-label="Search columns in tables"
             value={localValue}
             onChange={handleChange}
             onFocus={handleSearchFocus}
@@ -508,7 +508,7 @@ export const TimeSlicedSearch = ({
                 }}
               >
                 <ToggleButton value={SEARCH_SCOPE_KEYS.COLUMN_NAMES} aria-label="column names">
-                  <Tooltip title="Search in column/attribute names" slotProps={{ popper: { sx: { zIndex: 10001 } } }}>
+                  <Tooltip title="Search in column names" slotProps={{ popper: { sx: { zIndex: 10001 } } }}>
                     <AbcRounded fontSize="small" />
                   </Tooltip>
                 </ToggleButton>
