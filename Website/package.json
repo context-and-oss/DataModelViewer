@@ -11,7 +11,7 @@
     "prepipeline": "node scripts/copyStub.js"
   },
   "dependencies": {
-    "@azure/identity": "^4.13.0",
+    "@azure/identity": "^4.14.1",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
     "@joint/core": "^4.1.3",
